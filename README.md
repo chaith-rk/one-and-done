@@ -9,9 +9,11 @@ A minimalist task management web application with an orange theme inspired by Ap
 
 ## Features
 
-- **Organize with Folders & Lists** - Hierarchical task organization
+- **Organize with Lists** - Simple, flat task organization
 - **Simple Task Management** - Create, edit, complete, and delete tasks
-- **Drag & Drop** - Reorder tasks and lists intuitively
+- **Bulk Operations** - Multi-select and bulk delete/complete tasks
+- **Auto-Sorting** - Tasks sorted by creation date or due date
+- **Filter Views** - Toggle between All, Active, and Completed tasks
 - **Due Dates & Times** - Optional scheduling for tasks
 - **Clean UI** - Minimalist orange-themed interface
 - **Mobile Responsive** - Works beautifully on any device
@@ -22,9 +24,9 @@ A minimalist task management web application with an orange theme inspired by Ap
 - **Framework:** Next.js 15 (App Router) + TypeScript
 - **Database:** Supabase (PostgreSQL + Auth)
 - **UI:** shadcn/ui + Tailwind CSS
-- **Drag & Drop:** @dnd-kit/core
 - **Validation:** Zod
 - **Hosting:** Vercel
+- **Note:** No drag-drop in V1 - auto-sorting only
 
 ## Quick Start
 
@@ -111,7 +113,6 @@ one-and-done/
 │   ├── components/         # React components
 │   │   ├── ui/            # shadcn/ui components
 │   │   ├── auth/          # Auth forms
-│   │   ├── folders/       # Folder components
 │   │   ├── lists/         # List components
 │   │   └── tasks/         # Task components
 │   ├── lib/               # Utilities and configurations
@@ -237,31 +238,29 @@ Make sure all environment variables are set in your hosting platform:
 ### Creating Your First Task
 
 1. **Sign up or log in** to your account
-2. **Create a folder** (optional) - Click "New Folder" in the sidebar
-3. **Create a list** - Click "New List" in the middle panel
-4. **Add a task** - Click "New Task" button
-5. **Fill in task details:**
-   - Title (required)
-   - Description (optional)
-   - Due date (optional)
-   - Due time (optional)
-6. **Click Save**
+2. You'll see a default **"Inbox"** list with a sample task
+3. **Add a task** - Click "+ New Task" button
+4. Type your task title → Press Enter
+5. Click the task to add description, due date, or due time
+6. Click ☐ checkbox to mark complete → Task strikethroughs and moves to bottom
 
 ### Managing Tasks
 
-- **Complete a task:** Click the checkbox next to the task
-- **Edit a task:** Click on the task to open details
-- **Delete a task:** Click the delete icon in task details
-- **Reorder tasks:** Drag and drop tasks in the list
-- **Sort by due date:** Use the sort dropdown
+- **Complete a task:** Click the checkbox → Task strikethroughs and moves to bottom
+- **Edit a task:** Click on the task → Inline editor appears (desktop) or bottom sheet (mobile)
+- **Delete a task:** Hover → Click trash icon → Confirm deletion (permanent, no recovery)
+- **Bulk delete:** Select multiple tasks with checkboxes → Click "Delete Selected (N)" → Confirm
+- **Bulk complete:** Select multiple tasks → Click "Complete Selected (N)"
+- **Filter tasks:** Click "All" | "Active" | "Completed" to filter view
+- **Sort tasks:** Default is newest first, or click to sort by due date
 
-### Organizing with Folders & Lists
+### Organizing with Lists
 
-- **Folders** contain multiple lists
-- **Lists** contain multiple tasks
-- Tasks are always in a list
-- Lists can exist without a folder (inbox-style)
-- Drag to reorder folders and lists
+- **Create a list:** Click "+ New List" in sidebar → Type name → Press Enter
+- **Lists are sorted by creation order** (no manual reordering in V1)
+- **Delete a list:** Hover → Click trash icon → Confirm (deletes all tasks in that list)
+- **"Inbox" is protected:** The default Inbox list cannot be deleted or renamed
+- **No folders in V1** - Keep it simple with flat list structure (folders deferred to V2)
 
 ## Troubleshooting
 
@@ -355,23 +354,37 @@ This is a personal project, but suggestions are welcome!
 ## Roadmap
 
 ### V1 (Current)
-- [x] User authentication
-- [x] Folder/list/task CRUD
-- [x] Drag & drop reordering
-- [x] Due dates and times
-- [x] Task completion
+- [x] User authentication (email/password)
+- [x] Password reset via email
+- [x] Lists → Tasks hierarchy (no folders)
+- [x] Auto-sorting (newest first OR by due date)
+- [x] Task CRUD with due dates/times
+- [x] Bulk operations (multi-select, bulk delete/complete)
+- [x] Filter views (All, Active, Completed)
+- [x] Task completion (strikethrough, moves to bottom)
+- [x] Protected Inbox list
+- [x] Two-column layout (lists | tasks)
 - [x] Mobile responsive
-- [x] Orange minimalist UI
+- [x] Orange minimalist UI with theme tokens
 
-### V2 (Planned)
+### V1.5 (Quick Wins)
+- [ ] Email verification
+- [ ] Overdue task styling (red/warning colors)
+- [ ] Keyboard shortcuts
+
+### V2 (Major Features)
+- [ ] Folders (if data shows 30+ lists needed)
+- [ ] Drag-and-drop reordering
+- [ ] Soft delete / 30-day recovery
 - [ ] AI phone call concierge
 - [ ] ChatGPT integration
 - [ ] iOS native app
 - [ ] Subtasks
 - [ ] Recurring tasks
 - [ ] Collaboration features
+- [ ] Tags/labels
+- [ ] Calendar view
 - [ ] Dark mode
-- [ ] Password reset
 - [ ] OAuth providers (Google, Apple)
 
 See `docs/PRD.md` for detailed V2 features.

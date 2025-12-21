@@ -42,7 +42,6 @@ This document provides guidance for AI coding assistants (Claude, Cursor, GitHub
 │   ├── components/
 │   │   ├── ui/                  # shadcn/ui components
 │   │   ├── auth/                # Auth forms
-│   │   ├── folders/             # Folder components
 │   │   ├── lists/               # List components
 │   │   └── tasks/               # Task components
 │   ├── lib/
@@ -52,7 +51,6 @@ This document provides guidance for AI coding assistants (Claude, Cursor, GitHub
 │   │   │   └── middleware.ts    # Auth middleware
 │   │   ├── actions/             # Server Actions
 │   │   │   ├── auth.ts
-│   │   │   ├── folders.ts
 │   │   │   ├── lists.ts
 │   │   │   └── tasks.ts
 │   │   ├── hooks/               # Custom React hooks
@@ -82,8 +80,8 @@ This document provides guidance for AI coding assistants (Claude, Cursor, GitHub
 ### UI & Styling
 - **tailwindcss** - Utility-first CSS
 - **shadcn/ui** - Accessible component library
-- **@dnd-kit/core** - Drag and drop
 - **lucide-react** - Icons
+- **Note:** No drag-drop in V1 (auto-sort only, @dnd-kit/core not needed)
 
 ### Validation & Forms
 - **zod** - Runtime type validation
@@ -127,22 +125,38 @@ export default function TaskItem({ task, onComplete }: TaskItemProps) {
 - **Hooks:** `use + PascalCase.ts` (e.g., `useTasks.ts`)
 
 ### Styling
-- **Use Tailwind utilities** - Avoid custom CSS unless necessary
-- **Orange theme variables** - Use theme colors from config
+- **Use Tailwind theme tokens** - NEVER hardcode hex values in components
+- **Theme system required** - All colors defined in `tailwind.config.js`
 - **Mobile-first responsive** - Use `sm:`, `md:`, `lg:` breakpoints
 - **Consistent spacing** - Use Tailwind's spacing scale (4, 8, 16, etc.)
 
 ```typescript
-// Good - Tailwind utilities
-<button className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded">
+// CORRECT - Use theme tokens
+<button className="bg-primary hover:bg-primary-dark px-4 py-2 rounded text-white">
   Click me
 </button>
 
-// Avoid - Inline styles
+// WRONG - Hardcoded hex values (never do this!)
+<button className="bg-[#FF9500] hover:bg-[#FF8000]">
+  Click me
+</button>
+
+// WRONG - Inline styles
 <button style={{ backgroundColor: '#FF9500' }}>
   Click me
 </button>
 ```
+
+**Theme Token Reference:**
+- `bg-primary` - Orange #FF9500
+- `bg-primary-light` - Lighter orange
+- `bg-primary-dark` - Darker orange
+- `text-primary` - Dark text #1D1D1F
+- `text-secondary` - Gray text #86868B
+- `bg-background` - White #FFFFFF
+- `border-border` - Subtle borders #D2D2D7
+
+**Rationale:** Theme tokens make future theming/dark mode trivial (1 file edit vs 50+ find-replace)
 
 ### Database Access
 - **Use Server Actions** - No direct DB calls from client components
@@ -173,7 +187,6 @@ export async function createTask(data: CreateTaskInput) {
 
 1. **Choose the right location:**
    - Auth-related → `src/components/auth/`
-   - Folder-related → `src/components/folders/`
    - List-related → `src/components/lists/`
    - Task-related → `src/components/tasks/`
    - Reusable UI → `src/components/ui/`
@@ -293,30 +306,21 @@ Extended user information beyond Supabase Auth.
 | created_at | timestamp | Created timestamp |
 | updated_at | timestamp | Updated timestamp |
 
-#### `folders`
-Top-level organization containers.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| user_id | uuid | Foreign key to auth.users |
-| name | text | Folder name |
-| position | integer | Manual sort order |
-| created_at | timestamp | Created timestamp |
-| updated_at | timestamp | Updated timestamp |
-
 #### `lists`
-Task lists within folders (or standalone).
+Task lists (flat hierarchy, no folders in V1).
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | uuid | Primary key |
 | user_id | uuid | Foreign key to auth.users |
-| folder_id | uuid | Foreign key to folders (nullable) |
 | name | text | List name |
-| position | integer | Manual sort order within folder |
+| is_inbox | boolean | Protected default list (cannot delete/rename) |
 | created_at | timestamp | Created timestamp |
 | updated_at | timestamp | Updated timestamp |
+
+**Notes:**
+- No `position` column - lists sorted by `created_at ASC` (creation order)
+- No `folder_id` column - flat hierarchy in V1
 
 #### `tasks`
 Individual tasks within lists.
@@ -330,11 +334,15 @@ Individual tasks within lists.
 | due_date | date | Due date (nullable) |
 | due_time | time | Due time (nullable) |
 | completed | boolean | Completion status (default: false) |
-| position | integer | Manual sort order |
 | completed_at | timestamp | When completed (nullable) |
 | created_at | timestamp | Created timestamp |
 | updated_at | timestamp | Updated timestamp |
 | metadata | jsonb | AI-related data (nullable, for V2) |
+
+**Notes:**
+- No `position` column - tasks sorted by `created_at DESC` (newest first) OR `due_date ASC`
+- No `deleted_at` column - hard delete only in V1
+- Completed tasks always appear at bottom regardless of sort
 
 ### Relationships
 ```
@@ -342,12 +350,19 @@ auth.users (Supabase)
     ↓
 user_profiles (1:1)
     ↓
-folders (1:many)
-    ↓
-lists (1:many, optional folder)
+lists (1:many)
     ↓
 tasks (1:many)
 ```
+
+**V1 Data Model:** User → Lists → Tasks (flat, simple hierarchy)
+
+**Auto-Sorting Behavior:**
+- Lists: `ORDER BY created_at ASC` (creation order, oldest first)
+- Tasks (default): `ORDER BY completed ASC, created_at DESC` (incomplete first, newest first)
+- Tasks (by due date): `ORDER BY completed ASC, due_date ASC NULLS LAST` (incomplete first, earliest due date first)
+
+**V2+ Consideration:** Folders may be added if user data shows need for organizing 30+ lists
 
 ### Row Level Security (RLS)
 
@@ -452,10 +467,11 @@ The codebase is designed to support AI features in V2. Here's how to extend it:
 - Restart TypeScript server in IDE
 - Check migration was applied successfully
 
-#### Drag-and-drop not working
-- Ensure `@dnd-kit/core` is installed
-- Check parent has `'use client'` directive
-- Verify position fields are integers
+#### Auto-sorting not working
+- Check ORDER BY clause in query
+- Verify completed tasks are filtered to bottom
+- Check created_at timestamps are correct
+- For due date sort, verify due_date column exists and is populated
 
 #### Optimistic updates not showing
 - Check `revalidatePath` is called in Server Action
