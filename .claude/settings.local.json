@@ -8,7 +8,13 @@
       "Bash(git stash drop:*)",
       "Bash(npx create-next-app:*)",
       "Bash(npm:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
   }
 }

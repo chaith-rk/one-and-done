@@ -1,5 +1,7 @@
-import { getUser, logout } from '@/lib/actions/auth';
+import { getUser } from '@/lib/actions/auth';
+import { getLists } from '@/lib/actions/lists';
 import { redirect } from 'next/navigation';
+import DashboardClient from '@/components/dashboard/DashboardClient';
 
 export default async function Home() {
   const user = await getUser();
@@ -9,22 +11,24 @@ export default async function Home() {
     redirect('/login');
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-white">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-primary">One and Done</h1>
-        <p className="mt-4 text-gray-600">Welcome, {user.email}!</p>
-        <p className="mt-2 text-sm text-gray-500">Dashboard coming soon...</p>
+  // Fetch user's lists
+  const listsResult = await getLists();
+  const lists = listsResult.data || [];
 
-        <form action={logout} className="mt-8">
-          <button
-            type="submit"
-            className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
-          >
-            Sign Out
-          </button>
-        </form>
+  // Find Inbox list (created on signup)
+  const inboxList = lists.find(list => list.is_inbox);
+  const initialListId = inboxList?.id || lists[0]?.id || '';
+
+  // If no lists exist (shouldn't happen), show error
+  if (lists.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-center text-red-600">
+          <p>Error: No lists found. Please contact support.</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return <DashboardClient lists={lists} initialListId={initialListId} />;
 }
