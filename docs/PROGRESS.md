@@ -1,8 +1,8 @@
 # One and Done - Development Progress Tracker
 
-Last Updated: 2025-12-24
+Last Updated: 2025-12-25
 
-## Project Status: 🟢 In Development - Phase 4 (Dashboard Layout & Navigation)
+## Project Status: 🟢 In Development - Phase 5 (Task Management & Bulk Operations)
 
 ---
 
@@ -12,8 +12,8 @@ This file tracks the development progress of the One and Done task management ap
 
 **Quick Stats:**
 - **Project Start:** 2025-12-14
-- **Current Phase:** Phase 4 - Dashboard Layout & Navigation
-- **Overall Progress:** 37.5% (Phases 0, 1, 2, 3 complete)
+- **Current Phase:** Phase 5 - Task Management & Bulk Operations
+- **Overall Progress:** 50% (Phases 0, 1, 2, 3, 4 complete)
 - **Target V1 Launch:** TBD
 
 ---
@@ -184,31 +184,72 @@ None
 ---
 
 ### Phase 4: Dashboard Layout & Navigation
-**Status:** Not Started
-**Started:** -
-**Target Completion:** TBD
+**Status:** ✅ COMPLETED
+**Started:** 2025-12-25
+**Completed:** 2025-12-25
 
 #### Tasks
-- [ ] Create dashboard layout
-  - [ ] src/app/(dashboard)/layout.tsx
-  - [ ] src/app/(dashboard)/page.tsx
-- [ ] Create list components
-  - [ ] src/components/lists/ListSidebar.tsx
-  - [ ] src/components/lists/ListItem.tsx
-  - [ ] src/components/lists/CreateListButton.tsx
-- [ ] Implement list creation/editing/deletion
-- [ ] Implement protected Inbox list (cannot delete/rename)
-- [ ] Test responsive layout (mobile/tablet/desktop)
+- [x] Create dashboard layout (at root `/`, not `/dashboard`)
+  - [x] components/dashboard/DashboardClient.tsx
+  - [x] Updated app/page.tsx to render dashboard
+- [x] Create list components
+  - [x] components/lists/ListSidebar.tsx (with mobile menu)
+  - [x] components/lists/ListItem.tsx (simple, click-only)
+  - [x] components/lists/CreateListButton.tsx (with save/cancel buttons)
+- [x] Implement list creation/editing/deletion
+- [x] Implement protected Inbox list (cannot delete/rename)
+- [x] Test responsive layout (mobile/tablet/desktop)
 
 #### Success Criteria
-- Two-column layout on desktop (lists | tasks)
-- Single-column layout on mobile
-- Can create/edit/delete lists (except Inbox)
-- Lists auto-sorted by creation order
-- Empty states display properly
+- ✅ Two-column layout on desktop (lists | tasks)
+- ✅ Single-column layout on mobile with hamburger menu
+- ✅ Can create/edit/delete lists (except Inbox)
+- ✅ Lists auto-sorted by creation order
+- ✅ Empty states display properly
+
+#### Design Decisions Made
+**Decision 1: Dashboard at root URL**
+- **Choice:** Dashboard at `/` instead of `/dashboard` route
+- **Rationale:** Simpler URLs, dashboard is the main app experience
+- **Files affected:** app/page.tsx
+
+**Decision 2: Edit/Delete in Main Panel (not sidebar)**
+- **Choice:** List rename/delete operations happen in main panel header, not sidebar
+- **Rationale:** User feedback - cleaner sidebar, better mobile UX, consistent with common patterns
+- **Files affected:** components/dashboard/DashboardClient.tsx, components/lists/ListItem.tsx
+- **Impact:** Sidebar only shows list names (click to select), edit/delete icons appear next to list title in main area
+
+**Decision 3: New List Button Position**
+- **Choice:** "New List" button at top of sidebar (after "Lists" header)
+- **Rationale:** More accessible, follows common UI patterns (vs bottom of sidebar)
+- **Files affected:** components/lists/ListSidebar.tsx
+
+**Decision 4: Mobile Save/Cancel Buttons**
+- **Choice:** Added visible checkmark (save) and X (cancel) buttons when creating lists
+- **Rationale:** Mobile users can't easily press Enter, needed touch-friendly UI
+- **Files affected:** components/lists/CreateListButton.tsx
+- **Pattern:** Matches edit UX in main panel (consistent across app)
+
+**Decision 5: Mobile Layout Spacing**
+- **Choice:** Added `pt-20` padding on mobile to prevent hamburger icon overlap
+- **Rationale:** List title was hidden behind fixed hamburger menu button
+- **Files affected:** components/dashboard/DashboardClient.tsx
+
+**Decision 6: Browser confirm() for Deletes**
+- **Choice:** Use native `window.confirm()` instead of custom modal
+- **Rationale:** Fast V1 implementation, works everywhere, sufficient for MVP
+- **Files affected:** All delete operations
+- **Future:** Can replace with custom modal in Phase 6 or V2
 
 #### Blocked/Issues
 None
+
+#### Notes
+- Dashboard renders at root `/` with full list management
+- Inbox list auto-selected on first load
+- Server actions (Phase 3) handle all data operations
+- Mobile responsive with hamburger menu and slide-in sidebar
+- Clean sidebar design - no clutter, just list selection
 
 ---
 
@@ -426,6 +467,33 @@ None yet
 ---
 
 ## Decisions & Changes Log
+
+### 2025-12-25 (Phase 4: Dashboard)
+- **Decision:** Dashboard at root URL `/` instead of `/dashboard`
+- **Rationale:** Simpler URLs, dashboard is the main app. Login/signup remain at /login and /signup
+- **Files affected:** app/page.tsx
+
+- **Decision:** List edit/delete moved to main panel (not sidebar)
+- **Rationale:** User feedback - cleaner sidebar, better mobile UX, follows common UI patterns (Gmail, Todoist, etc.)
+- **Implementation:** Sidebar only for list selection, edit/delete icons appear next to list title in main area
+- **Files affected:** components/dashboard/DashboardClient.tsx, components/lists/ListItem.tsx
+
+- **Decision:** New List button at top of sidebar
+- **Rationale:** More accessible, follows common UI patterns (vs original plan of bottom placement)
+- **Files affected:** components/lists/ListSidebar.tsx
+
+- **Decision:** Mobile save/cancel buttons for list creation
+- **Rationale:** Mobile users can't easily press Enter key, needed visible touch-friendly UI
+- **Implementation:** Checkmark (✓) to save, X to cancel, matching edit UX throughout app
+- **Files affected:** components/lists/CreateListButton.tsx
+
+- **Decision:** Browser confirm() for delete operations
+- **Rationale:** Fast V1 implementation, works everywhere. Custom modal can be added in Phase 6 or V2
+- **Files affected:** All delete operations (lists, and later tasks)
+
+- **Decision:** Mobile padding adjustment (pt-20)
+- **Rationale:** Fixed hamburger menu overlapping list title on mobile
+- **Files affected:** components/dashboard/DashboardClient.tsx
 
 ### 2025-12-24
 - **Decision:** Disabled email confirmation for signup
