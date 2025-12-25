@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Edit2, Trash2, Check, X } from 'lucide-react'
 import ListSidebar from '@/components/lists/ListSidebar'
+import TaskList from '@/components/tasks/TaskList'
 import { updateList, deleteList } from '@/lib/actions/lists'
 import type { List } from '@/types/database.types'
 
@@ -178,11 +179,8 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
                 )}
               </div>
 
-              {/* Task Area Placeholder */}
-              <div className="text-center py-16 text-gray-500">
-                <p className="text-lg">No tasks yet</p>
-                <p className="text-sm mt-2">Task management coming in Phase 5</p>
-              </div>
+              {/* Task List */}
+              <TaskList listId={selectedList.id} listName={selectedList.name} />
             </div>
           ) : (
             <div className="text-center py-16 text-gray-500">
