@@ -148,13 +148,15 @@ export default function TaskItem({ task, onComplete }: TaskItemProps) {
 ```
 
 **Theme Token Reference:**
-- `bg-primary` - Orange #FF9500
+- `bg-primary` - Orange #FF9500 ⚠️ **WARNING:** shadcn overrides this to gray for buttons
 - `bg-primary-light` - Lighter orange
 - `bg-primary-dark` - Darker orange
 - `text-primary` - Dark text #1D1D1F
 - `text-secondary` - Gray text #86868B
 - `bg-background` - White #FFFFFF
 - `border-border` - Subtle borders #D2D2D7
+
+**For buttons, use explicit colors:** Use `bg-[#FF9500]` instead of `bg-primary` to avoid CSS variable conflicts with shadcn/ui.
 
 **Rationale:** Theme tokens make future theming/dark mode trivial (1 file edit vs 50+ find-replace)
 
@@ -289,6 +291,81 @@ export async function createTask(data: CreateTaskInput) {
    ```
 
 3. **Add navigation link** (in layout or nav component)
+
+## Authentication
+
+### Implementation Details
+
+**Email/Password Authentication** (Supabase Auth)
+- Email confirmation is **DISABLED** for V1 (reduces signup friction)
+- Users are auto-logged in immediately after signup
+- No email verification step required
+
+**Auth Flow:**
+1. Signup → Account created → Auto-login → Redirect to dashboard
+2. Login → Verify credentials → Redirect to dashboard
+3. Logout → Clear session → Redirect to /login
+
+**Important Configuration:**
+- Supabase dashboard: Auth → Providers → Email → **"Confirm email" is OFF**
+- Users can sign up and log in without email verification
+
+### React 19 Hooks
+
+**IMPORTANT:** React 19 changed form hook APIs:
+
+```typescript
+// ✅ CORRECT (React 19)
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
+
+export function LoginForm() {
+  const [state, formAction] = useActionState(login, initialState);
+  // ...
+}
+
+// ❌ WRONG (Old React 18 API)
+import { useFormState } from 'react-dom'; // Doesn't exist in React 19
+```
+
+**Server Action Signatures:**
+```typescript
+// ✅ CORRECT - useActionState expects prevState parameter
+export async function login(
+  prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  // Implementation
+}
+
+// ❌ WRONG - Missing prevState parameter
+export async function login(formData: FormData): Promise<ActionResult> {
+  // This won't work with useActionState
+}
+```
+
+### Styling Auth Components
+
+**Button Color Issue:**
+- shadcn/ui overrides `--primary` CSS variable with neutral gray
+- Don't use `bg-primary` class for buttons - it will appear white
+- Use explicit hex colors instead: `bg-[#FF9500]` and `hover:bg-[#FF8000]`
+
+```typescript
+// ✅ CORRECT
+<button className="bg-[#FF9500] hover:bg-[#FF8000]">Submit</button>
+
+// ❌ WRONG - Will appear white due to CSS variable override
+<button className="bg-primary hover:bg-primary-hover">Submit</button>
+```
+
+### User Profile & Inbox Creation
+
+On signup, the system automatically creates:
+1. User profile entry in `user_profiles` table
+2. Default "Inbox" list (with `is_inbox: true`)
+
+This happens in `lib/actions/auth.ts` → `signup()` function.
 
 ## Database Schema
 

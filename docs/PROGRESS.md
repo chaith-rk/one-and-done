@@ -1,8 +1,8 @@
 # One and Done - Development Progress Tracker
 
-Last Updated: 2025-12-14
+Last Updated: 2025-12-24
 
-## Project Status: 🟢 Ready for Development - Phase 1 (Project Setup & Infrastructure)
+## Project Status: 🟢 In Development - Phase 3 (Core Data Layer)
 
 ---
 
@@ -12,8 +12,8 @@ This file tracks the development progress of the One and Done task management ap
 
 **Quick Stats:**
 - **Project Start:** 2025-12-14
-- **Current Phase:** Phase 1 - Project Setup & Infrastructure
-- **Overall Progress:** 10%
+- **Current Phase:** Phase 3 - Core Data Layer
+- **Overall Progress:** 25% (Phases 0, 1, 2 complete)
 - **Target V1 Launch:** TBD
 
 ---
@@ -42,70 +42,106 @@ None
 ---
 
 ### Phase 1: Project Setup & Infrastructure
-**Status:** Not Started
-**Started:** -
-**Target Completion:** TBD
+**Status:** ✅ COMPLETED
+**Started:** 2025-12-24
+**Completed:** 2025-12-24
 
 #### Tasks
-- [ ] Initialize Next.js 15 with TypeScript
-- [ ] Install core dependencies
-  - [ ] @supabase/ssr
-  - [ ] @supabase/supabase-js
-  - [ ] zod
-  - [ ] Note: No @dnd-kit in V1 (no drag-drop, auto-sort only)
-- [ ] Configure Tailwind CSS with orange theme
-- [ ] Install and configure shadcn/ui
-- [ ] Set up Supabase project (cloud dashboard)
-- [ ] Create database schema migration (001_initial_schema.sql)
-- [ ] Configure environment variables (.env.local)
-- [ ] Test Supabase connection
-- [ ] Verify build succeeds
+- [x] Initialize Next.js 15 with TypeScript
+- [x] Install core dependencies
+  - [x] @supabase/ssr
+  - [x] @supabase/supabase-js
+  - [x] zod
+  - [x] Note: No @dnd-kit in V1 (no drag-drop, auto-sort only)
+- [x] Configure Tailwind CSS with orange theme (#FF9500)
+- [x] Install and configure shadcn/ui
+- [x] Set up Supabase project (cloud dashboard)
+- [x] Create database schema migration (001_initial_schema.sql)
+- [x] Configure environment variables (.env.local)
+- [x] Test Supabase connection
+- [x] Verify build succeeds
+- [x] Added `npm run type-check` script for faster TypeScript validation
 
 #### Success Criteria
-- `npm run dev` starts successfully
-- Can connect to Supabase
-- TypeScript compiles without errors
-- Tailwind styles render correctly
+- ✅ `npm run dev` starts successfully
+- ✅ Can connect to Supabase
+- ✅ TypeScript compiles without errors
+- ✅ Tailwind styles render correctly
+- ✅ Build completes successfully
+- ✅ Database tables created (user_profiles, lists, tasks)
 
 #### Blocked/Issues
 None
+
+#### Notes
+- Added type-check script to catch TypeScript errors early without full build
+- Supabase migration ran successfully with all RLS policies
 
 ---
 
 ### Phase 2: Authentication System
-**Status:** Not Started
-**Started:** -
-**Target Completion:** TBD
+**Status:** ✅ COMPLETED
+**Started:** 2025-12-24
+**Completed:** 2025-12-24
 
 #### Tasks
-- [ ] Create Supabase client configurations
-  - [ ] src/lib/supabase/client.ts (browser client)
-  - [ ] src/lib/supabase/server.ts (server client)
-  - [ ] src/lib/supabase/middleware.ts (auth middleware)
-- [ ] Create authentication server actions
-  - [ ] src/lib/actions/auth.ts (login, signup, logout)
-- [ ] Create auth components
-  - [ ] src/components/auth/LoginForm.tsx
-  - [ ] src/components/auth/SignupForm.tsx
-- [ ] Create auth pages
-  - [ ] src/app/(auth)/login/page.tsx
-  - [ ] src/app/(auth)/signup/page.tsx
-- [ ] Create root layout with auth provider
-  - [ ] src/app/layout.tsx
-- [ ] Test signup flow
-- [ ] Test login flow
-- [ ] Test logout flow
-- [ ] Verify RLS policies work
+- [x] Create Supabase client configurations
+  - [x] lib/supabase/client.ts (browser client)
+  - [x] lib/supabase/server.ts (server client)
+  - [x] lib/supabase/middleware.ts (auth middleware)
+- [x] Create authentication server actions
+  - [x] lib/actions/auth.ts (login, signup, logout, getUser)
+- [x] Create auth components
+  - [x] components/auth/LoginForm.tsx
+  - [x] components/auth/SignupForm.tsx
+- [x] Create auth pages
+  - [x] app/login/page.tsx
+  - [x] app/signup/page.tsx
+- [x] Create middleware for session refresh
+  - [x] middleware.ts
+- [x] Update root layout and home page with auth protection
+  - [x] app/layout.tsx
+  - [x] app/page.tsx (protected route)
+- [x] Test signup flow
+- [x] Test login flow
+- [x] Test logout flow
+- [x] Verify RLS policies work
 
 #### Success Criteria
-- Users can sign up with email/password
-- Users can log in
-- Users can log out
-- Sessions persist across refreshes
-- RLS policies prevent unauthorized access
+- ✅ Users can sign up with email/password
+- ✅ Users can log in
+- ✅ Users can log out
+- ✅ Sessions persist across refreshes
+- ✅ RLS policies prevent unauthorized access
+- ✅ Auto-login after signup (no email confirmation)
+- ✅ Protected routes redirect to login when not authenticated
 
 #### Blocked/Issues
-None
+**Issues Encountered & Resolved:**
+1. **React 19 Hook Changes**
+   - Issue: `useFormState` renamed to `useActionState` in React 19
+   - Fix: Updated imports to use `useActionState` from 'react' and `useFormStatus` from 'react-dom'
+
+2. **TypeScript Type Errors**
+   - Issue: Server actions had wrong signature for `useActionState`
+   - Fix: Added `prevState` parameter to signup/login functions
+   - Prevention: Added `npm run type-check` to catch these early
+
+3. **Button Visibility Issue**
+   - Issue: Orange button showing white (only visible on hover)
+   - Fix: Changed from `bg-primary` (CSS variable) to explicit `bg-[#FF9500]`
+   - Root cause: shadcn overrode --primary CSS variable with neutral gray
+
+4. **Email Confirmation Flow**
+   - Issue: Users redirected to login after signup, couldn't login until email verified
+   - Fix: Disabled email confirmation in Supabase dashboard
+   - Result: Users auto-logged in after signup, smoother UX
+
+#### Notes
+- Email confirmation disabled in Supabase (Auth → Providers → Email → Confirm email OFF)
+- User profile and Inbox list created automatically on signup
+- Form validation using Zod schemas
+- Optimistic UI updates with revalidatePath
 
 ---
 
@@ -386,6 +422,25 @@ None yet
 
 ## Decisions & Changes Log
 
+### 2025-12-24
+- **Decision:** Disabled email confirmation for signup
+- **Rationale:** Reduces friction, smoother UX for V1. Users are auto-logged in immediately after signup.
+- **Implementation:** Supabase dashboard → Auth → Providers → Email → Confirm email OFF
+- **Files affected:** None (Supabase config change only)
+
+- **Decision:** Added `npm run type-check` script
+- **Rationale:** Catch TypeScript errors early without running full build (faster feedback loop)
+- **Files affected:** package.json
+
+- **Decision:** Use explicit color values instead of CSS variables for primary buttons
+- **Rationale:** shadcn/ui overrides --primary CSS variable, causing buttons to appear white
+- **Files affected:** LoginForm.tsx, SignupForm.tsx (using bg-[#FF9500] instead of bg-primary)
+
+- **Decision:** React 19 requires different hook imports
+- **Rationale:** React 19 renamed useFormState → useActionState and moved it to 'react' package
+- **Implementation:** Import useActionState from 'react', useFormStatus from 'react-dom'
+- **Files affected:** All form components using form actions
+
 ### 2025-12-14
 - **Decision:** Created comprehensive documentation first before code
 - **Rationale:** Ensures alignment on product vision and technical approach
@@ -401,9 +456,9 @@ None yet
 - Lighthouse score: -
 
 ### Database
-- Tables created: 0/4
-- Migrations run: 0/1
-- RLS policies: 0/4
+- Tables created: 3/3 (user_profiles, lists, tasks)
+- Migrations run: 1/1 (001_initial_schema.sql)
+- RLS policies: 12/12 (4 per table: SELECT, INSERT, UPDATE, DELETE)
 
 ### Test Coverage
 - Unit tests: 0%
