@@ -91,6 +91,43 @@ This document provides guidance for AI coding assistants (Claude, Cursor, GitHub
 - **eslint** - Linting
 - **prettier** (optional) - Code formatting
 
+## Git Workflow
+
+**Commit at logical checkpoints, not everything at once**
+
+### Good Times to Commit:
+- ✅ After completing a feature (e.g., "login works")
+- ✅ After creating a working component
+- ✅ After fixing a bug
+- ✅ Before trying something risky/experimental
+- ✅ When tests pass
+
+### Don't Wait Until:
+- ❌ Entire phase is complete
+- ❌ "Everything is perfect"
+- ❌ End of session
+
+### Example Commit Flow:
+```bash
+# After auth forms work
+git commit -m "Add login and signup forms"
+
+# After fixing an issue
+git commit -m "Fix button visibility issue"
+
+# After server actions work
+git commit -m "Add task CRUD server actions"
+
+# Before major refactor
+git commit -m "Working state before refactoring task list"
+```
+
+### Guideline:
+**Target: 3-5 meaningful commits per session** - strike a balance between granular history and not over-committing
+
+### When Unsure:
+Ask yourself: "If this breaks, would I want to undo just this change?" If yes, commit it separately.
+
 ## Coding Conventions
 
 ### TypeScript
