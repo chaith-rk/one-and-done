@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { X, FolderPlus } from 'lucide-react'
+import { X, FolderPlus, LogOut } from 'lucide-react'
 import ListItem from './ListItem'
 import CreateListButton from './CreateListButton'
+import { logout } from '@/lib/actions/auth'
 import type { List } from '@/types/database.types'
 
 interface ListSidebarProps {
@@ -114,6 +115,19 @@ export default function ListSidebar({ lists, currentListId, onListSelect }: List
               />
             ))
           )}
+        </div>
+
+        {/* Logout Button */}
+        <div className="px-4 py-4 border-t border-gray-200">
+          <form action={logout}>
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Log out</span>
+            </button>
+          </form>
         </div>
       </aside>
 
