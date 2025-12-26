@@ -81,25 +81,16 @@ export default function TaskItem({
 
       {/* Task Content */}
       <div className="flex-1 min-w-0" onClick={handleTaskClick}>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div
-            className={`text-base ${
-              task.completed
-                ? 'line-through text-gray-400'
-                : isOverdue
-                ? 'text-red-600 cursor-pointer hover:text-red-700 font-medium'
-                : 'text-gray-900 cursor-pointer hover:text-[#FF9500]'
-            }`}
-          >
-            {task.title}
-          </div>
-
-          {/* List Name Pill - only show in All Tasks view */}
-          {listName && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#FF9500] text-white">
-              {listName}
-            </span>
-          )}
+        <div
+          className={`text-base ${
+            task.completed
+              ? 'line-through text-gray-400'
+              : isOverdue
+              ? 'text-red-600 cursor-pointer hover:text-red-700 font-medium'
+              : 'text-gray-900 cursor-pointer hover:text-[#FF9500]'
+          }`}
+        >
+          {task.title}
         </div>
 
         {task.description && (
@@ -139,10 +130,17 @@ export default function TaskItem({
         )}
       </div>
 
+      {/* List Name Pill - only show in All Tasks view */}
+      {listName && (
+        <span className="flex-shrink-0 inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-[#FF9500] text-white">
+          {listName}
+        </span>
+      )}
+
       {/* Delete Button */}
       <button
         onClick={handleDelete}
-        className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-100 rounded-lg transition-all"
+        className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-100 rounded-lg transition-all flex-shrink-0"
         title="Delete task"
       >
         <Trash2 className="w-5 h-5 text-red-600" />
