@@ -22,6 +22,16 @@ export default function ListSidebar({ lists, currentListId, onListSelect }: List
     setIsMobileOpen(false) // Close mobile menu after selection
   }
 
+  // Sort lists: Inbox first, then others by newest first
+  const sortedLists = [...lists].sort((a, b) => {
+    // Inbox always first
+    if (a.is_inbox) return -1
+    if (b.is_inbox) return 1
+
+    // Other lists sorted by created_at DESC (newest first)
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -83,12 +93,12 @@ export default function ListSidebar({ lists, currentListId, onListSelect }: List
             </div>
           </button>
 
-          {lists.length === 0 ? (
+          {sortedLists.length === 0 ? (
             <div className="px-4 py-8 text-center text-gray-500 text-sm">
               No lists yet
             </div>
           ) : (
-            lists.map((list) => (
+            sortedLists.map((list) => (
               <ListItem
                 key={list.id}
                 list={list}
