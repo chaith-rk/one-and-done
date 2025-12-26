@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, FolderPlus } from 'lucide-react'
 import ListItem from './ListItem'
 import CreateListButton from './CreateListButton'
 import type { List } from '@/types/database.types'
@@ -44,6 +44,7 @@ export default function ListSidebar({ lists, currentListId, onListSelect }: List
 
       {/* Sidebar */}
       <aside
+        id="mobile-sidebar"
         className={`
           fixed md:static inset-y-0 left-0 z-50
           w-72 bg-white border-r border-gray-200
@@ -51,6 +52,8 @@ export default function ListSidebar({ lists, currentListId, onListSelect }: List
           transform transition-transform duration-300 ease-in-out
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
+        role="navigation"
+        aria-label="Task lists"
       >
         {/* Header */}
         <div className="px-4 py-4 border-b border-gray-200">
@@ -94,8 +97,12 @@ export default function ListSidebar({ lists, currentListId, onListSelect }: List
           </button>
 
           {sortedLists.length === 0 ? (
-            <div className="px-4 py-8 text-center text-gray-500 text-sm">
-              No lists yet
+            <div className="flex flex-col items-center justify-center px-4 py-8 text-gray-500">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                <FolderPlus className="w-6 h-6 text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-600">No lists yet</p>
+              <p className="text-xs text-gray-400 mt-1">Create one above</p>
             </div>
           ) : (
             sortedLists.map((list) => (
@@ -113,7 +120,10 @@ export default function ListSidebar({ lists, currentListId, onListSelect }: List
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white border border-gray-300 rounded-lg shadow-lg hover:bg-gray-50 transition-colors"
+        className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white border border-gray-300 rounded-lg shadow-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF9500]"
+        aria-label="Open navigation menu"
+        aria-expanded={isMobileOpen}
+        aria-controls="mobile-sidebar"
       >
         <svg
           className="w-6 h-6 text-gray-700"
@@ -123,6 +133,7 @@ export default function ListSidebar({ lists, currentListId, onListSelect }: List
           strokeWidth="2"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>

@@ -6,7 +6,7 @@ import { type NextRequest, NextResponse } from 'next/server';
  * Used to refresh auth sessions automatically
  */
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
+  const supabaseResponse = NextResponse.next({
     request,
   });
 
@@ -28,10 +28,8 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh session if needed
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Refresh session if needed - this call is important to refresh the session
+  await supabase.auth.getUser();
 
   return supabaseResponse;
 }

@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { createList, deleteList, updateList } from '@/lib/actions/lists';
-import { createTask, deleteTask, updateTask, getTasks, toggleTaskCompletion, bulkDeleteTasks, bulkCompleteTasks } from '@/lib/actions/tasks';
+import { createTask, deleteTask, getTasks, toggleTaskCompletion } from '@/lib/actions/tasks';
 
-export function TestActions({ userId }: { userId: string }) {
-  const [result, setResult] = useState<any>(null);
+export function TestActions() {
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
 
   const handleCreateInbox = async () => {
     const result = await createList({ name: 'Inbox', is_inbox: true });

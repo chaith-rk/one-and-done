@@ -6,7 +6,7 @@ export async function GET() {
     const supabase = await createClient();
 
     // Test 1: Check auth
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    const { error: sessionError } = await supabase.auth.getSession();
 
     if (sessionError) {
       return NextResponse.json(

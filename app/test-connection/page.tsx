@@ -16,7 +16,7 @@ export default function TestConnection() {
         setDetails('Client created successfully\n');
 
         // Test 2: Try to get session (should be null since not logged in)
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        const { error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
           setStatus('❌ Connection failed');

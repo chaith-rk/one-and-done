@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Edit2, Trash2, Check, X } from 'lucide-react'
+import { Edit2, Trash2, Check, X, MousePointerClick } from 'lucide-react'
 import ListSidebar from '@/components/lists/ListSidebar'
 import TaskList from '@/components/tasks/TaskList'
 import { updateList, deleteList } from '@/lib/actions/lists'
+import { useToast } from '@/components/ui/Toast'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import type { List } from '@/types/database.types'
 
 interface DashboardClientProps {
@@ -17,7 +19,9 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
   const [isEditing, setIsEditing] = useState(false)
   const [editedName, setEditedName] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { addToast } = useToast()
 
   const selectedList = selectedListId === 'all-tasks' ? null : lists.find(list => list.id === selectedListId)
 
@@ -63,6 +67,7 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
 
       if (result.success) {
         cancelEditing()
+        addToast('List renamed successfully', 'success')
       } else {
         setError(result.error || 'Failed to rename list')
       }
@@ -71,21 +76,21 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
     }
   }
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true)
+  }
+
+  const handleDeleteConfirm = async () => {
     if (!selectedList) return
-
-    const confirmed = window.confirm(
-      `Delete "${selectedList.name}"?\n\nThis will also delete all tasks in this list. This cannot be undone.`
-    )
-
-    if (!confirmed) return
+    setShowDeleteConfirm(false)
 
     try {
       const result = await deleteList(selectedList.id)
 
       if (!result.success) {
-        alert(result.error || 'Failed to delete list')
+        addToast(result.error || 'Failed to delete list', 'error')
       } else {
+        addToast('List deleted', 'success')
         // Switch to Inbox or first available list
         const inboxList = lists.find(l => l.is_inbox)
         const newList = inboxList || lists.find(l => l.id !== selectedList.id)
@@ -94,7 +99,7 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
         }
       }
     } catch (err) {
-      alert('Failed to delete list')
+      addToast('Failed to delete list', 'error')
     }
   }
 
@@ -165,7 +170,7 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
                 ) : (
                   <div className="flex items-center justify-between gap-4">
                     <h1 className="text-3xl font-bold text-gray-900">
-                      {selectedList.name}
+                      {selectedList.is_inbox ? 'Home' : selectedList.name}
                     </h1>
                     {!selectedList.is_inbox && (
                       <div className="flex items-center gap-2">
@@ -177,9 +182,10 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
                           <Edit2 className="w-5 h-5 text-gray-600" />
                         </button>
                         <button
-                          onClick={handleDelete}
+                          onClick={handleDeleteClick}
                           className="p-2 hover:bg-red-100 rounded-lg transition-colors"
                           title="Delete list"
+                          aria-label={`Delete list: ${selectedList.name}`}
                         >
                           <Trash2 className="w-5 h-5 text-red-600" />
                         </button>
@@ -190,15 +196,33 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
               </div>
 
               {/* Task List */}
-              <TaskList listId={selectedList.id} listName={selectedList.name} lists={lists} />
+              <TaskList listId={selectedList.id} listName={selectedList.is_inbox ? 'Home' : selectedList.name} lists={lists} />
             </div>
           ) : (
-            <div className="text-center py-16 text-gray-500">
-              <p className="text-lg">Select a list to view tasks</p>
+            <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <MousePointerClick className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-lg font-medium text-gray-700">Select a list</p>
+              <p className="text-sm mt-1 text-gray-500">Choose a list from the sidebar to view tasks</p>
             </div>
           )}
         </div>
       </main>
+
+      {/* Delete List Confirmation Dialog */}
+      {selectedList && (
+        <ConfirmDialog
+          isOpen={showDeleteConfirm}
+          title="Delete List"
+          message={`Are you sure you want to delete "${selectedList.name}"? This will also delete all tasks in this list. This cannot be undone.`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          variant="danger"
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>
   )
 }

@@ -94,7 +94,7 @@ export default function CreateListButton() {
   return (
     <button
       onClick={() => setIsCreating(true)}
-      className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+      className="w-full px-3 py-2.5 flex items-center justify-center gap-2 text-[#FF9500] hover:bg-orange-50 border-2 border-dashed border-[#FF9500]/40 hover:border-[#FF9500] rounded-lg transition-all text-sm font-medium"
     >
       <Plus className="w-4 h-4" />
       New List

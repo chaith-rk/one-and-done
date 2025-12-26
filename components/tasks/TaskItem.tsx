@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Trash2, Calendar, Clock } from 'lucide-react'
 import { toggleTaskCompletion, deleteTask } from '@/lib/actions/tasks'
+import { useToast } from '@/components/ui/Toast'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import type { Task } from '@/types/database.types'
 
 interface TaskItemProps {
@@ -22,28 +24,35 @@ export default function TaskItem({
   isOverdue,
   listName,
 }: TaskItemProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const { addToast } = useToast()
+
   const handleCheckboxChange = async () => {
     // Optimistically update in parent first
     onTaskToggle(task.id)
     // Then update server in background
-    await toggleTaskCompletion(task.id)
+    const result = await toggleTaskCompletion(task.id)
+    if (!result.success) {
+      // Revert optimistic update would require refresh
+      addToast('Failed to update task', 'error')
+    }
   }
 
-  const handleDelete = async () => {
-    const confirmed = window.confirm(
-      `Delete "${task.title}"?\n\nThis cannot be undone.`
-    )
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true)
+  }
 
-    if (!confirmed) return
-
+  const handleDeleteConfirm = async () => {
+    setShowDeleteConfirm(false)
     // Optimistically remove from UI
     onTaskDelete(task.id)
     // Then delete from server in background
     const result = await deleteTask(task.id)
 
     if (!result.success) {
-      alert(result.error || 'Failed to delete task')
-      // Could refresh here if needed
+      addToast(result.error || 'Failed to delete task', 'error')
+    } else {
+      addToast('Task deleted', 'success')
     }
   }
 
@@ -70,24 +79,31 @@ export default function TaskItem({
   return (
     <div
       className={`group flex items-start gap-3 p-4 border-b hover:bg-gray-50 transition-colors`}
+      role="listitem"
     >
       {/* Checkbox */}
       <input
         type="checkbox"
         checked={task.completed}
         onChange={handleCheckboxChange}
-        className="mt-1 w-5 h-5 rounded border-gray-300 text-[#FF9500] focus:ring-[#FF9500] cursor-pointer"
+        className="mt-1 w-5 h-5 rounded border-gray-300 text-[#FF9500] focus:ring-[#FF9500] focus:ring-2 focus:ring-offset-1 cursor-pointer"
+        aria-label={`Mark "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`}
       />
 
       {/* Task Content */}
-      <div className="flex-1 min-w-0" onClick={handleTaskClick}>
+      <button
+        type="button"
+        className="flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-[#FF9500] focus:ring-offset-2 rounded"
+        onClick={handleTaskClick}
+        aria-label={`Edit task: ${task.title}`}
+      >
         <div
           className={`text-base ${
             task.completed
               ? 'line-through text-gray-400'
               : isOverdue
-              ? 'text-red-600 cursor-pointer hover:text-red-700 font-medium'
-              : 'text-gray-900 cursor-pointer hover:text-[#FF9500]'
+              ? 'text-red-600 hover:text-red-700 font-medium'
+              : 'text-gray-900 hover:text-[#FF9500]'
           }`}
         >
           {task.title}
@@ -128,23 +144,36 @@ export default function TaskItem({
             )}
           </div>
         )}
-      </div>
+      </button>
 
       {/* List Name Pill - only show in All Tasks view */}
       {listName && (
-        <span className="flex-shrink-0 inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-[#FF9500] text-white">
+        <span className="flex-shrink-0 w-[100px] px-2.5 py-1 rounded-md text-xs font-medium bg-[#FF9500] text-white text-center truncate">
           {listName}
         </span>
       )}
 
-      {/* Delete Button */}
+      {/* Delete Button - visible on mobile, hover-visible on desktop */}
       <button
-        onClick={handleDelete}
-        className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-100 rounded-lg transition-all flex-shrink-0"
+        onClick={handleDeleteClick}
+        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 p-2 hover:bg-red-100 rounded-lg transition-all flex-shrink-0 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500"
         title="Delete task"
+        aria-label={`Delete task: ${task.title}`}
       >
         <Trash2 className="w-5 h-5 text-red-600" />
       </button>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Task"
+        message={`Are you sure you want to delete "${task.title}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   )
 }

@@ -29,8 +29,8 @@ export function LoginForm() {
   const [state, formAction] = useActionState(login, initialState);
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-white rounded-2xl shadow-lg p-8">
+    <div className="w-full max-w-md mx-auto px-4 sm:px-0">
+      <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
           <p className="text-gray-600">Sign in to your account</p>
@@ -84,7 +84,7 @@ export function LoginForm() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/signup" className="text-primary hover:text-primary-hover font-semibold">
               Sign up
             </Link>

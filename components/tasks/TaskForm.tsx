@@ -87,23 +87,27 @@ export default function TaskForm({ listId, task, onClose, mode }: TaskFormProps)
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50 animate-in fade-in duration-200"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="task-form-title"
     >
       <div
-        className="bg-white w-full md:max-w-2xl md:rounded-lg shadow-xl overflow-hidden"
+        className="bg-white w-full md:max-w-2xl md:rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-2 md:zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 id="task-form-title" className="text-lg font-semibold text-gray-900">
             {mode === 'create' ? 'New Task' : 'Edit Task'}
           </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
             title="Close"
+            aria-label="Close dialog"
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>

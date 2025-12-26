@@ -44,7 +44,7 @@ export default async function TestPage() {
         </pre>
       </div>
 
-      <TestActions userId={user.id} />
+      <TestActions />
     </div>
   );
 }

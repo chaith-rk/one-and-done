@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, CheckCircle2, ClipboardList, Inbox } from 'lucide-react'
 import TaskItem from './TaskItem'
 import TaskForm from './TaskForm'
 import TaskFilterToggle from './TaskFilterToggle'
+import { LoadingState } from '@/components/ui/Spinner'
 import { getTasks, getAllTasks } from '@/lib/actions/tasks'
 import type { Task, TaskFilter, List } from '@/types/database.types'
 
@@ -49,7 +50,7 @@ export default function TaskList({ listId, listName, lists }: TaskListProps) {
 
   // Sort and organize tasks
   const getSortedTasks = () => {
-    let taskList = [...tasks]
+    const taskList = [...tasks]
 
     // Separate active and completed
     const activeTasks = taskList.filter((t) => !t.completed)
@@ -59,7 +60,6 @@ export default function TaskList({ listId, listName, lists }: TaskListProps) {
     if (sortByDueDate) {
       // Sort by due date: overdue first, then upcoming (earliest first), then no due date
       activeTasks.sort((a, b) => {
-        const now = new Date()
         const dateA = a.due_date ? new Date(a.due_date) : null
         const dateB = b.due_date ? new Date(b.due_date) : null
 
@@ -97,7 +97,8 @@ export default function TaskList({ listId, listName, lists }: TaskListProps) {
   // Get list name for a task
   const getListName = (task: Task): string => {
     const list = lists.find((l) => l.id === task.list_id)
-    return list?.name || 'Unknown'
+    if (!list) return 'Unknown'
+    return list.is_inbox ? 'Home' : list.name
   }
 
   const handleTaskClick = (task: Task) => {
@@ -133,13 +134,9 @@ export default function TaskList({ listId, listName, lists }: TaskListProps) {
   }
 
 
-  // Empty states
+  // Loading state
   if (isLoading) {
-    return (
-      <div className="text-center py-16 text-gray-500">
-        <p className="text-lg">Loading tasks...</p>
-      </div>
-    )
+    return <LoadingState message="Loading tasks..." />
   }
 
   const sortedTasks = getSortedTasks()
@@ -166,14 +163,14 @@ export default function TaskList({ listId, listName, lists }: TaskListProps) {
             <span>Sort by Due Date</span>
           </label>
 
-          {/* New Task Button - only show for specific lists, not All Tasks */}
+          {/* Add Task Button - only show for specific lists, not All Tasks */}
           {!isAllTasksView && (
             <button
               onClick={() => setShowTaskForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#FF9500] hover:bg-[#FF8000] text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#FF9500] hover:bg-[#FF8000] text-white rounded-lg transition-colors font-medium"
             >
               <Plus className="w-5 h-5" />
-              <span>New Task</span>
+              <span>Add Task</span>
             </button>
           )}
         </div>
@@ -181,22 +178,49 @@ export default function TaskList({ listId, listName, lists }: TaskListProps) {
 
       {/* Task List */}
       {filteredTaskCount === 0 ? (
-        <div className="text-center py-16 text-gray-500">
+        <div className="flex flex-col items-center justify-center py-16 text-gray-500">
           {filter === 'all' && (
             <>
-              <p className="text-lg">No tasks yet</p>
-              <p className="text-sm mt-2">Click "New Task" to add your first task</p>
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <Inbox className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-lg font-medium text-gray-700">No tasks yet</p>
+              <p className="text-sm mt-1 text-gray-500">
+                {isAllTasksView
+                  ? 'Create tasks in a list to see them here'
+                  : 'Click "New Task" to add your first task'}
+              </p>
             </>
           )}
-          {filter === 'active' && <p className="text-lg">No active tasks</p>}
-          {filter === 'completed' && <p className="text-lg">No completed tasks</p>}
+          {filter === 'active' && (
+            <>
+              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle2 className="w-8 h-8 text-green-400" />
+              </div>
+              <p className="text-lg font-medium text-gray-700">No active tasks</p>
+              <p className="text-sm mt-1 text-gray-500">All caught up!</p>
+            </>
+          )}
+          {filter === 'completed' && (
+            <>
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <ClipboardList className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-lg font-medium text-gray-700">No completed tasks</p>
+              <p className="text-sm mt-1 text-gray-500">Complete some tasks to see them here</p>
+            </>
+          )}
         </div>
       ) : allTasksCompleted && filter === 'all' ? (
-        <div className="text-center py-16 text-gray-500">
-          <p className="text-lg">All tasks completed! 🎉</p>
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle2 className="w-10 h-10 text-green-500" />
+          </div>
+          <p className="text-xl font-medium text-gray-700">All tasks completed!</p>
+          <p className="text-sm mt-1 text-gray-500">Great job! Time to relax or add more tasks.</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+        <div className="bg-white border border-gray-300 rounded-lg overflow-hidden" role="list" aria-label="Tasks">
           {/* Active Tasks */}
           {activeTasks.map((task) => (
             <TaskItem
