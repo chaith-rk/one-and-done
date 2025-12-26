@@ -8,25 +8,31 @@ import type { Task } from '@/types/database.types'
 interface TaskItemProps {
   task: Task
   onTaskClick: (task: Task) => void
+  onTaskToggle: (taskId: string) => void
+  onTaskDelete: (taskId: string) => void
   isSelectionMode: boolean
   isSelected: boolean
   onSelectionToggle: (taskId: string) => void
+  isOverdue: boolean
 }
 
 export default function TaskItem({
   task,
   onTaskClick,
+  onTaskToggle,
+  onTaskDelete,
   isSelectionMode,
   isSelected,
   onSelectionToggle,
+  isOverdue,
 }: TaskItemProps) {
-  const [isDeleting, setIsDeleting] = useState(false)
-
   const handleCheckboxChange = async () => {
     if (isSelectionMode) {
       onSelectionToggle(task.id)
     } else {
-      // Toggle completion
+      // Optimistically update in parent first
+      onTaskToggle(task.id)
+      // Then update server in background
       await toggleTaskCompletion(task.id)
     }
   }
@@ -38,12 +44,14 @@ export default function TaskItem({
 
     if (!confirmed) return
 
-    setIsDeleting(true)
+    // Optimistically remove from UI
+    onTaskDelete(task.id)
+    // Then delete from server in background
     const result = await deleteTask(task.id)
 
     if (!result.success) {
       alert(result.error || 'Failed to delete task')
-      setIsDeleting(false)
+      // Could refresh here if needed
     }
   }
 
@@ -71,9 +79,7 @@ export default function TaskItem({
 
   return (
     <div
-      className={`group flex items-start gap-3 p-4 border-b hover:bg-gray-50 transition-colors ${
-        isDeleting ? 'opacity-50 pointer-events-none' : ''
-      }`}
+      className={`group flex items-start gap-3 p-4 border-b hover:bg-gray-50 transition-colors`}
     >
       {/* Checkbox */}
       <input
@@ -89,6 +95,8 @@ export default function TaskItem({
           className={`text-base ${
             task.completed
               ? 'line-through text-gray-400'
+              : isOverdue
+              ? 'text-red-600 cursor-pointer hover:text-red-700 font-medium'
               : 'text-gray-900 cursor-pointer hover:text-[#FF9500]'
           }`}
         >
@@ -109,7 +117,11 @@ export default function TaskItem({
         {(task.due_date || task.due_time) && (
           <div
             className={`flex items-center gap-3 mt-2 text-sm ${
-              task.completed ? 'text-gray-300' : 'text-gray-500'
+              task.completed
+                ? 'text-gray-300'
+                : isOverdue
+                ? 'text-red-600 font-medium'
+                : 'text-gray-500'
             }`}
           >
             {task.due_date && (
