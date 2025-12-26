@@ -16,6 +16,7 @@ import type {
   BulkDeleteTasksInput,
   BulkCompleteTasksInput,
   TaskQueryOptions,
+  TaskFilter,
 } from '@/types/database.types';
 
 type ActionResult<T = void> = {
@@ -23,6 +24,68 @@ type ActionResult<T = void> = {
   data?: T;
   error?: string;
 };
+
+/**
+ * Get all tasks across all lists for the current user
+ */
+export async function getAllTasks(options: { filter?: TaskFilter }): Promise<ActionResult<Task[]>> {
+  const supabase = await createClient();
+
+  // Get current user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      success: false,
+      error: 'Unauthorized',
+    };
+  }
+
+  // Get all lists for the user first
+  const { data: lists, error: listsError } = await supabase
+    .from('lists')
+    .select('id')
+    .eq('user_id', user.id);
+
+  if (listsError || !lists) {
+    return {
+      success: false,
+      error: 'Failed to fetch lists',
+    };
+  }
+
+  const listIds = lists.map((list) => list.id);
+
+  // Build query for all tasks from user's lists
+  let query = supabase
+    .from('tasks')
+    .select('*')
+    .in('list_id', listIds);
+
+  // Apply filter
+  if (options.filter === 'active') {
+    query = query.eq('completed', false);
+  } else if (options.filter === 'completed') {
+    query = query.eq('completed', true);
+  }
+
+  // Sort by created_at (we'll sort in UI)
+  query = query.order('created_at', { ascending: false });
+
+  const { data, error } = await query;
+
+  if (error) {
+    return {
+      success: false,
+      error: 'Failed to fetch tasks',
+    };
+  }
+
+  return {
+    success: true,
+    data: data as Task[],
+  };
+}
 
 /**
  * Get tasks for a specific list with optional filtering and sorting

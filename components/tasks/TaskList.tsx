@@ -5,24 +5,24 @@ import { Plus } from 'lucide-react'
 import TaskItem from './TaskItem'
 import TaskForm from './TaskForm'
 import TaskFilterToggle from './TaskFilterToggle'
-import BulkActionBar from './BulkActionBar'
-import { getTasks } from '@/lib/actions/tasks'
-import type { Task, TaskFilter, TaskSortBy } from '@/types/database.types'
+import { getTasks, getAllTasks } from '@/lib/actions/tasks'
+import type { Task, TaskFilter, List } from '@/types/database.types'
 
 interface TaskListProps {
   listId: string
   listName: string
+  lists: List[]
 }
 
-export default function TaskList({ listId, listName }: TaskListProps) {
+export default function TaskList({ listId, listName, lists }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [filter, setFilter] = useState<TaskFilter>('all')
   const [sortByDueDate, setSortByDueDate] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
-  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
-  const [isSelectionMode, setIsSelectionMode] = useState(false)
+
+  const isAllTasksView = listId === 'all-tasks'
 
   // Fetch tasks whenever listId or filter changes
   useEffect(() => {
@@ -31,18 +31,20 @@ export default function TaskList({ listId, listName }: TaskListProps) {
 
   const fetchTasks = async () => {
     setIsLoading(true)
-    const result = await getTasks({
-      list_id: listId,
-      filter,
-      sort_by: 'created_at', // Always fetch by created_at, we'll sort in UI
-    })
+
+    const result = isAllTasksView
+      ? await getAllTasks({ filter })
+      : await getTasks({
+          list_id: listId,
+          filter,
+          sort_by: 'created_at', // Always fetch by created_at, we'll sort in UI
+        })
 
     if (result.success && result.data) {
       setTasks(result.data)
     }
 
     setIsLoading(false)
-    setSelectedTaskIds([]) // Clear selection when fetching new tasks
   }
 
   // Sort and organize tasks
@@ -92,6 +94,12 @@ export default function TaskList({ listId, listName }: TaskListProps) {
     return dueDate < now
   }
 
+  // Get list name for a task
+  const getListName = (task: Task): string => {
+    const list = lists.find((l) => l.id === task.list_id)
+    return list?.name || 'Unknown'
+  }
+
   const handleTaskClick = (task: Task) => {
     setEditingTask(task)
   }
@@ -124,28 +132,6 @@ export default function TaskList({ listId, listName }: TaskListProps) {
     // Server delete happens in TaskItem
   }
 
-  const handleSelectionToggle = (taskId: string) => {
-    setSelectedTaskIds((prev) =>
-      prev.includes(taskId)
-        ? prev.filter((id) => id !== taskId)
-        : [...prev, taskId]
-    )
-  }
-
-  const handleClearSelection = () => {
-    setSelectedTaskIds([])
-    setIsSelectionMode(false)
-    fetchTasks() // Refresh after bulk operations
-  }
-
-  const handleEnterSelectionMode = () => {
-    setIsSelectionMode(true)
-  }
-
-  const handleExitSelectionMode = () => {
-    setIsSelectionMode(false)
-    setSelectedTaskIds([])
-  }
 
   // Empty states
   if (isLoading) {
@@ -169,46 +155,26 @@ export default function TaskList({ listId, listName }: TaskListProps) {
         <TaskFilterToggle currentFilter={filter} onFilterChange={setFilter} />
 
         <div className="flex items-center gap-2">
-          {/* Selection Mode Controls */}
-          {isSelectionMode ? (
+          {/* Sort Toggle */}
+          <label className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+            <input
+              type="checkbox"
+              checked={sortByDueDate}
+              onChange={(e) => setSortByDueDate(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300 text-[#FF9500] focus:ring-[#FF9500]"
+            />
+            <span>Sort by Due Date</span>
+          </label>
+
+          {/* New Task Button - only show for specific lists, not All Tasks */}
+          {!isAllTasksView && (
             <button
-              onClick={handleExitSelectionMode}
-              className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={() => setShowTaskForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#FF9500] hover:bg-[#FF8000] text-white rounded-lg transition-colors"
             >
-              Cancel
+              <Plus className="w-5 h-5" />
+              <span>New Task</span>
             </button>
-          ) : (
-            <>
-              {/* Sort Toggle */}
-              <label className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={sortByDueDate}
-                  onChange={(e) => setSortByDueDate(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-[#FF9500] focus:ring-[#FF9500]"
-                />
-                <span>Sort by Due Date</span>
-              </label>
-
-              {/* Select Tasks Button */}
-              {tasks.length > 0 && (
-                <button
-                  onClick={handleEnterSelectionMode}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  Select Tasks
-                </button>
-              )}
-
-              {/* New Task Button */}
-              <button
-                onClick={() => setShowTaskForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#FF9500] hover:bg-[#FF8000] text-white rounded-lg transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                <span>New Task</span>
-              </button>
-            </>
           )}
         </div>
       </div>
@@ -232,17 +198,15 @@ export default function TaskList({ listId, listName }: TaskListProps) {
       ) : (
         <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
           {/* Active Tasks */}
-          {activeTasks.map((task, index) => (
+          {activeTasks.map((task) => (
             <TaskItem
               key={task.id}
               task={task}
               onTaskClick={handleTaskClick}
               onTaskToggle={handleTaskToggle}
               onTaskDelete={handleTaskDelete}
-              isSelectionMode={isSelectionMode}
-              isSelected={selectedTaskIds.includes(task.id)}
-              onSelectionToggle={handleSelectionToggle}
               isOverdue={isOverdue(task)}
+              listName={isAllTasksView ? getListName(task) : undefined}
             />
           ))}
 
@@ -259,10 +223,8 @@ export default function TaskList({ listId, listName }: TaskListProps) {
               onTaskClick={handleTaskClick}
               onTaskToggle={handleTaskToggle}
               onTaskDelete={handleTaskDelete}
-              isSelectionMode={isSelectionMode}
-              isSelected={selectedTaskIds.includes(task.id)}
-              onSelectionToggle={handleSelectionToggle}
               isOverdue={false}
+              listName={isAllTasksView ? getListName(task) : undefined}
             />
           ))}
         </div>
@@ -284,14 +246,6 @@ export default function TaskList({ listId, listName }: TaskListProps) {
           task={editingTask}
           mode="edit"
           onClose={handleCloseForm}
-        />
-      )}
-
-      {/* Bulk Action Bar - only show when tasks are selected */}
-      {selectedTaskIds.length > 0 && (
-        <BulkActionBar
-          selectedTaskIds={selectedTaskIds}
-          onClearSelection={handleClearSelection}
         />
       )}
     </div>

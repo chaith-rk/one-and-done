@@ -19,7 +19,7 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const selectedList = lists.find(list => list.id === selectedListId)
+  const selectedList = selectedListId === 'all-tasks' ? null : lists.find(list => list.id === selectedListId)
 
   // Focus input when entering edit mode
   useEffect(() => {
@@ -117,7 +117,17 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
 
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto p-8 md:p-8 pt-20 md:pt-8">
-          {selectedList ? (
+          {selectedListId === 'all-tasks' ? (
+            <div>
+              {/* All Tasks Header */}
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold text-gray-900">All Tasks</h1>
+              </div>
+
+              {/* Task List for All Tasks */}
+              <TaskList listId="all-tasks" listName="All Tasks" lists={lists} />
+            </div>
+          ) : selectedList ? (
             <div>
               {/* List Header with Edit/Delete */}
               <div className="mb-6">
@@ -180,7 +190,7 @@ export default function DashboardClient({ lists, initialListId }: DashboardClien
               </div>
 
               {/* Task List */}
-              <TaskList listId={selectedList.id} listName={selectedList.name} />
+              <TaskList listId={selectedList.id} listName={selectedList.name} lists={lists} />
             </div>
           ) : (
             <div className="text-center py-16 text-gray-500">

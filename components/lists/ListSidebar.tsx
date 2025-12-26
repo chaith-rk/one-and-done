@@ -58,6 +58,31 @@ export default function ListSidebar({ lists, currentListId, onListSelect }: List
 
         {/* List Items */}
         <div className="flex-1 overflow-y-auto">
+          {/* All Tasks - Special View */}
+          <button
+            onClick={() => handleListSelect('all-tasks')}
+            className={`w-full px-4 py-3 text-left hover:bg-gray-100 transition-colors border-b border-gray-200 ${
+              currentListId === 'all-tasks' ? 'bg-orange-50 border-l-4 border-l-[#FF9500]' : ''
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <svg
+                className="w-5 h-5 text-[#FF9500]"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+              </svg>
+              <span className={`font-medium ${currentListId === 'all-tasks' ? 'text-[#FF9500]' : 'text-gray-700'}`}>
+                All Tasks
+              </span>
+            </div>
+          </button>
+
           {lists.length === 0 ? (
             <div className="px-4 py-8 text-center text-gray-500 text-sm">
               No lists yet

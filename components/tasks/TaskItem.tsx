@@ -10,10 +10,8 @@ interface TaskItemProps {
   onTaskClick: (task: Task) => void
   onTaskToggle: (taskId: string) => void
   onTaskDelete: (taskId: string) => void
-  isSelectionMode: boolean
-  isSelected: boolean
-  onSelectionToggle: (taskId: string) => void
   isOverdue: boolean
+  listName?: string
 }
 
 export default function TaskItem({
@@ -21,20 +19,14 @@ export default function TaskItem({
   onTaskClick,
   onTaskToggle,
   onTaskDelete,
-  isSelectionMode,
-  isSelected,
-  onSelectionToggle,
   isOverdue,
+  listName,
 }: TaskItemProps) {
   const handleCheckboxChange = async () => {
-    if (isSelectionMode) {
-      onSelectionToggle(task.id)
-    } else {
-      // Optimistically update in parent first
-      onTaskToggle(task.id)
-      // Then update server in background
-      await toggleTaskCompletion(task.id)
-    }
+    // Optimistically update in parent first
+    onTaskToggle(task.id)
+    // Then update server in background
+    await toggleTaskCompletion(task.id)
   }
 
   const handleDelete = async () => {
@@ -56,9 +48,7 @@ export default function TaskItem({
   }
 
   const handleTaskClick = () => {
-    if (!isSelectionMode) {
-      onTaskClick(task)
-    }
+    onTaskClick(task)
   }
 
   const formatDate = (dateStr: string | null) => {
@@ -84,23 +74,32 @@ export default function TaskItem({
       {/* Checkbox */}
       <input
         type="checkbox"
-        checked={isSelectionMode ? isSelected : task.completed}
+        checked={task.completed}
         onChange={handleCheckboxChange}
         className="mt-1 w-5 h-5 rounded border-gray-300 text-[#FF9500] focus:ring-[#FF9500] cursor-pointer"
       />
 
       {/* Task Content */}
       <div className="flex-1 min-w-0" onClick={handleTaskClick}>
-        <div
-          className={`text-base ${
-            task.completed
-              ? 'line-through text-gray-400'
-              : isOverdue
-              ? 'text-red-600 cursor-pointer hover:text-red-700 font-medium'
-              : 'text-gray-900 cursor-pointer hover:text-[#FF9500]'
-          }`}
-        >
-          {task.title}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div
+            className={`text-base ${
+              task.completed
+                ? 'line-through text-gray-400'
+                : isOverdue
+                ? 'text-red-600 cursor-pointer hover:text-red-700 font-medium'
+                : 'text-gray-900 cursor-pointer hover:text-[#FF9500]'
+            }`}
+          >
+            {task.title}
+          </div>
+
+          {/* List Name Pill - only show in All Tasks view */}
+          {listName && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#FF9500] text-white">
+              {listName}
+            </span>
+          )}
         </div>
 
         {task.description && (
@@ -141,15 +140,13 @@ export default function TaskItem({
       </div>
 
       {/* Delete Button */}
-      {!isSelectionMode && (
-        <button
-          onClick={handleDelete}
-          className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-100 rounded-lg transition-all"
-          title="Delete task"
-        >
-          <Trash2 className="w-5 h-5 text-red-600" />
-        </button>
-      )}
+      <button
+        onClick={handleDelete}
+        className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-100 rounded-lg transition-all"
+        title="Delete task"
+      >
+        <Trash2 className="w-5 h-5 text-red-600" />
+      </button>
     </div>
   )
 }
