@@ -22,6 +22,7 @@ export default function TaskList({ listId, listName }: TaskListProps) {
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
+  const [isSelectionMode, setIsSelectionMode] = useState(false)
 
   // Fetch tasks whenever listId or filter changes
   useEffect(() => {
@@ -69,8 +70,8 @@ export default function TaskList({ listId, listName }: TaskListProps) {
         return dateA!.getTime() - dateB!.getTime()
       })
     } else {
-      // Sort by newest first (created_at DESC)
-      activeTasks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      // Sort by most recently edited (updated_at DESC)
+      activeTasks.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
     }
 
     // Sort completed tasks by completed_at (most recently completed first)
@@ -133,10 +134,18 @@ export default function TaskList({ listId, listName }: TaskListProps) {
 
   const handleClearSelection = () => {
     setSelectedTaskIds([])
+    setIsSelectionMode(false)
     fetchTasks() // Refresh after bulk operations
   }
 
-  const isSelectionMode = selectedTaskIds.length > 0
+  const handleEnterSelectionMode = () => {
+    setIsSelectionMode(true)
+  }
+
+  const handleExitSelectionMode = () => {
+    setIsSelectionMode(false)
+    setSelectedTaskIds([])
+  }
 
   // Empty states
   if (isLoading) {
@@ -160,25 +169,47 @@ export default function TaskList({ listId, listName }: TaskListProps) {
         <TaskFilterToggle currentFilter={filter} onFilterChange={setFilter} />
 
         <div className="flex items-center gap-2">
-          {/* Sort Toggle */}
-          <label className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-            <input
-              type="checkbox"
-              checked={sortByDueDate}
-              onChange={(e) => setSortByDueDate(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-[#FF9500] focus:ring-[#FF9500]"
-            />
-            <span>Sort by Due Date</span>
-          </label>
+          {/* Selection Mode Controls */}
+          {isSelectionMode ? (
+            <button
+              onClick={handleExitSelectionMode}
+              className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              Cancel
+            </button>
+          ) : (
+            <>
+              {/* Sort Toggle */}
+              <label className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sortByDueDate}
+                  onChange={(e) => setSortByDueDate(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-[#FF9500] focus:ring-[#FF9500]"
+                />
+                <span>Sort by Due Date</span>
+              </label>
 
-          {/* New Task Button */}
-          <button
-            onClick={() => setShowTaskForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#FF9500] hover:bg-[#FF8000] text-white rounded-lg transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            <span>New Task</span>
-          </button>
+              {/* Select Tasks Button */}
+              {tasks.length > 0 && (
+                <button
+                  onClick={handleEnterSelectionMode}
+                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Select Tasks
+                </button>
+              )}
+
+              {/* New Task Button */}
+              <button
+                onClick={() => setShowTaskForm(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#FF9500] hover:bg-[#FF8000] text-white rounded-lg transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                <span>New Task</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -256,11 +287,13 @@ export default function TaskList({ listId, listName }: TaskListProps) {
         />
       )}
 
-      {/* Bulk Action Bar */}
-      <BulkActionBar
-        selectedTaskIds={selectedTaskIds}
-        onClearSelection={handleClearSelection}
-      />
+      {/* Bulk Action Bar - only show when tasks are selected */}
+      {selectedTaskIds.length > 0 && (
+        <BulkActionBar
+          selectedTaskIds={selectedTaskIds}
+          onClearSelection={handleClearSelection}
+        />
+      )}
     </div>
   )
 }
